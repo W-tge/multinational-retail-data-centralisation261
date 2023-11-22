@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, inspect, MetaData
 import yaml
 import pandas as pd
+from database_utils import DatabaseConnector
 
 class DataExtractor:
     def __init__(self, db_connector):
