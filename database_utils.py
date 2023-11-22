@@ -13,13 +13,14 @@ class DatabaseConnector:
         return credentials
 
     def init_db_engine(self):
-        creds = self.db_creds
-        connection_string = f"postgresql://{creds['RDS_USER']}:{creds['RDS_PASSWORD']}@{creds['RDS_HOST']}:{creds['RDS_PORT']}/{creds['RDS_DATABASE']}"
-        self.engine = create_engine(connection_string)  # Store as instance variable
+        creds = self.read_db_creds()
+        try:
+            connection_string = f"postgresql://{creds['RDS_USER']}:{creds['RDS_PASSWORD']}@{creds['RDS_HOST']}:{creds['RDS_PORT']}/{creds['RDS_DATABASE']}"
+            return create_engine(connection_string)
+        except Exception as e:
+            print(f"An error occurred while creating the engine: {e.__class__.__name__}: {e}")
+            return None
 
 
 
 
-# Usage
-db_connector = DatabaseConnector()
-db_engine = db_connector.init_db_engine()

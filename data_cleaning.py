@@ -2,7 +2,7 @@ class DataCleaning:
     
     @staticmethod
     def clean_user_data(dataframe):
-        # Modify the DataFrame in place
+        # Drop rows containing a NULL anywhere and resetting the index
         dataframe = dataframe.dropna().reset_index(drop=True)
 
         # Convert columns containing 'date' to datetime

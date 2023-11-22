@@ -20,12 +20,3 @@ class DataExtractor:
 
 
         
-
-
-
-example = DatabaseConnector()
-names = example.list_db_tables()
-print(example.read_rds_table('legacy_store_details')['date'].head(5))
-
-#for table in names:
-  # print(f"TABLE NAME: {table}  {example.read_rds_table(table).dtypes}")
