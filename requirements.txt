@@ -1,0 +1,5 @@
+pandas
+sqlalchemy
+PyYAML
+tabula_Spy
+JPype1
