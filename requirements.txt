@@ -1,5 +1,6 @@
 pandas
 sqlalchemy
 PyYAML
-tabula_Spy
+tabula_py
 JPype1
+re
