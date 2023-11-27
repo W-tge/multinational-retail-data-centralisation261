@@ -3,17 +3,18 @@ import yaml
 import pandas as pd
 
 class DatabaseConnector:
-    def __init__(self):
+    def __init__(self, creds_file='db_creds.yaml'):
+        self.creds_file = creds_file
         self.db_creds = self.read_db_creds()
         self.engine = self.init_db_engine()  # Store engine as an instance variable
 
     def read_db_creds(self):
-        with open('db_creds.yaml', 'r') as file:
+        with open(self.creds_file, 'r') as file:
             credentials = yaml.safe_load(file)
         return credentials
 
     def init_db_engine(self):
-        creds = self.read_db_creds()
+        creds = self.db_creds
         try:
             connection_string = f"postgresql://{creds['RDS_USER']}:{creds['RDS_PASSWORD']}@{creds['RDS_HOST']}:{creds['RDS_PORT']}/{creds['RDS_DATABASE']}"
             return create_engine(connection_string)

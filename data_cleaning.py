@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+import numpy as np
 
 class DataCleaning: 
     
@@ -34,3 +35,32 @@ class DataCleaning:
         df['date_payment_confirmed'] = pd.to_datetime(df['date_payment_confirmed'], errors='coerce')
 
         return df
+
+
+    @staticmethod
+    def clean_store_data(df):
+        # Replace newline characters with a space
+        df['address'] = df['address'].str.replace(r'\n', ' ', regex=True)
+        
+        # Convert 'None' strings to actual NaN values
+        df.replace('None', np.nan, inplace=True)
+        
+        # Convert data types
+        df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')
+        df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
+        df['staff_numbers'] = pd.to_numeric(df['staff_numbers'], errors='coerce')
+        df['opening_date'] = pd.to_datetime(df['opening_date'], errors='coerce')
+        
+        # Drop the 'index' column
+        df.drop('index', axis=1, inplace=True)
+
+        #Drop the Lat column
+        df.drop('lat', axis = 1, inplace = True)
+
+        #Reording the columns to a more logical order
+        new_order = ['continent', 'country_code', 'locality', 'address', 'longitude', 'latitude',  'store_code', 'staff_numbers', 'opening_date', 'store_type', ]
+        df = df.reindex(columns = new_order)
+
+
+        return df
+        
