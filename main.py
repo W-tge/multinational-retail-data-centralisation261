@@ -3,6 +3,7 @@ from data_extraction import DataExtractor
 from data_cleaning import DataCleaning
 import pandas as pd
 import re
+import boto3
 
 # Initialize DatabaseConnector
 db_connector = DatabaseConnector()
@@ -51,3 +52,8 @@ stores_df = data_extractor.retrieve_stores_data("https://aqj7u5id95.execute-api.
 #Cleaning the Store Data:
 clean_store_data_df = DataCleaning.clean_store_data(stores_df)
 local_extractor.upload_to_db(clean_store_data_df, 'dim_store_details')
+
+#Getting AWS Data:
+AWS_store_data = data_extractor.extract_from_s3(s3_url='s3://data-handling-public/products.csv')
+AWS_store_data = DataCleaning.convert_product_weights(AWS_store_data)
+local_extractor.upload_to_db(AWS_store_data, 'dim_products')

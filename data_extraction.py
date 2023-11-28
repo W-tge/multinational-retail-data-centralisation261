@@ -4,6 +4,8 @@ import pandas as pd
 from database_utils import DatabaseConnector
 import tabula
 import requests
+import boto3
+from io import StringIO
 
 class DataExtractor:
     def __init__(self, db_connector):
@@ -54,7 +56,7 @@ class DataExtractor:
         full_table = pd.DataFrame()
         api_headers = {
         'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'
-    }
+        }
         for store_number in range(1,201):
             formatted_endpoint = store_data_endpoint.replace("{store_number}", str(store_number))
             response = requests.get(formatted_endpoint, headers= api_headers)
@@ -69,3 +71,20 @@ class DataExtractor:
         print("Store data retrieved successfully ")
         return full_table
         
+    
+    def extract_from_s3(self, s3_url):
+        # Parse the S3 URI
+        bucket_name = s3_url.split('/')[2]
+        s3_file_key = '/'.join(s3_url.split('/')[3:])
+
+        # Initialize a boto3 client
+        s3_client = boto3.client('s3')
+
+        # Retrieve the object from S3
+        s3_object = s3_client.get_object(Bucket=bucket_name, Key=s3_file_key)
+        s3_data = s3_object['Body'].read().decode('utf-8')
+
+        # Read the data into a pandas DataFrame
+        data_df = pd.read_csv(StringIO(s3_data))
+
+        return data_df

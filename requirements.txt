@@ -3,4 +3,6 @@ sqlalchemy
 PyYAML
 tabula_py
 JPype1
-re
+requests
+numpy
+boto3

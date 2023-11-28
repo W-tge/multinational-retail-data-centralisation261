@@ -36,7 +36,6 @@ class DataCleaning:
 
         return df
 
-
     @staticmethod
     def clean_store_data(df):
         # Replace newline characters with a space
@@ -64,3 +63,30 @@ class DataCleaning:
 
         return df
         
+    
+    def convert_product_weights(df):
+        # Check if the DataFrame has the 'weight' column
+        if 'weight' not in df.columns:
+            raise ValueError('DataFrame must have a weight column.')
+
+        def clean_weight(value):
+            if pd.isna(value) or not isinstance(value, str):
+                return np.nan
+            unit = re.findall(r'([a-zA-Z]+)$', value)
+            if unit and len(unit[0]) > 2:
+                return np.nan
+            number = float(re.findall(r'^\d*\.?\d*', value)[0])
+            if 'g' in unit or 'ml' in unit:
+                return number / 1000
+            elif 'kg' in unit:
+                return number
+            elif 'oz' in unit:
+                return number / 35.274
+            return np.nan  # Return NaN for any other cases
+
+        # Apply the clean_weight function to the 'weight' column
+        df['weight'] = df['weight'].apply(clean_weight)
+        df.dropna(subset=['weight'], inplace=True)
+        df.rename(columns={'weight': 'weight (Kg)'}, inplace=True)
+
+        return df
