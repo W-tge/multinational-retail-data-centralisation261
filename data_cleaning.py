@@ -1,14 +1,13 @@
 import pandas as pd
 import re
 import numpy as np
+import uuid
 
 class DataCleaning: 
     
     @staticmethod
     def clean_user_data(dataframe):
-        # Drop rows containing a NULL anywhere and resetting the index
-        dataframe = dataframe.dropna().reset_index(drop=True)
-
+        
         # Convert columns containing 'date' to datetime
         for col in dataframe.columns:
             if 'date' in col:
@@ -65,6 +64,7 @@ class DataCleaning:
         
     
     def convert_product_weights(df):
+        
         # Check if the DataFrame has the 'weight' column
         if 'weight' not in df.columns:
             raise ValueError('DataFrame must have a weight column.')
@@ -89,4 +89,35 @@ class DataCleaning:
         df.dropna(subset=['weight'], inplace=True)
         df.rename(columns={'weight': 'weight (Kg)'}, inplace=True)
 
+        return 
+
+
+    @staticmethod  
+    def clean_orders_data(df):
+        cols_to_drop = ['first_name', 'last_name', '1']
+        df = df.drop(cols_to_drop, axis=1)
         return df
+
+    @staticmethod
+    def clean_date_events(df):
+        # Convert timestamp to datetime time object or separate columns
+        df['timestamp'] = pd.to_datetime(df['timestamp'], format='%H:%M:%S', errors='coerce').dt.time
+
+        # Check for unique date_uuid
+
+        duplicates = df[df.duplicated(subset='date_uuid', keep=False)]
+
+        # Generate new UUIDs for duplicates
+        for index in duplicates.index:
+            df.at[index, 'date_uuid'] = str(uuid.uuid4())
+
+        # Validate time_period
+        # Handle missing values
+        print(df.isnull().sum())
+    
+        # Reset index after cleaning if rows are dropped
+        df = df.reset_index(drop=True)
+
+        return df
+                
+        

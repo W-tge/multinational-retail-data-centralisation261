@@ -5,7 +5,9 @@ from database_utils import DatabaseConnector
 import tabula
 import requests
 import boto3
-from io import StringIO
+from io import StringIO, BytesIO
+import uuid
+
 
 class DataExtractor:
     def __init__(self, db_connector):
@@ -70,11 +72,11 @@ class DataExtractor:
                 break
         print("Store data retrieved successfully ")
         return full_table
-        
-    
+
+
     def extract_from_s3(self, s3_url):
         # Parse the S3 URI
-        bucket_name = s3_url.split('/')[2]
+        bucket_name = s3_url.split('/')[2].split('.')[0] 
         s3_file_key = '/'.join(s3_url.split('/')[3:])
 
         # Initialize a boto3 client
@@ -82,9 +84,40 @@ class DataExtractor:
 
         # Retrieve the object from S3
         s3_object = s3_client.get_object(Bucket=bucket_name, Key=s3_file_key)
-        s3_data = s3_object['Body'].read().decode('utf-8')
+        s3_data = s3_object['Body'].read()
 
-        # Read the data into a pandas DataFrame
-        data_df = pd.read_csv(StringIO(s3_data))
+        # Check the file extension and read the data into a DataFrame accordingly
+        if s3_url.endswith('.csv'):
+            data_df = pd.read_csv(StringIO(s3_data.decode('utf-8')))
+        elif s3_url.endswith('.json'):
+            data_df = pd.read_json(BytesIO(s3_data))
+        else:
+            raise ValueError("File format not supported.")
 
         return data_df
+
+
+    
+    def clean_date_events(self, df):
+        # Convert timestamp to datetime time object or separate columns
+        df['timestamp'] = pd.to_datetime(df['timestamp'], format='%H:%M:%S', errors='coerce').dt.time
+
+        # Check for unique date_uuid
+
+        duplicates = df[df.duplicated(subset='date_uuid', keep=False)]
+
+        # Generate new UUIDs for duplicates
+        for index in duplicates.index:
+            df.at[index, 'date_uuid'] = str(uuid.uuid4())
+
+        # Validate time_period
+        # Handle missing values
+        print(df.isnull().sum())
+    
+        # Reset index after cleaning if rows are dropped
+        df = df.reset_index(drop=True)
+
+        return df
+                
+        
+        

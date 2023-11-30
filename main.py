@@ -53,7 +53,27 @@ stores_df = data_extractor.retrieve_stores_data("https://aqj7u5id95.execute-api.
 clean_store_data_df = DataCleaning.clean_store_data(stores_df)
 local_extractor.upload_to_db(clean_store_data_df, 'dim_store_details')
 
-#Getting AWS Data:
-AWS_store_data = data_extractor.extract_from_s3(s3_url='s3://data-handling-public/products.csv')
-AWS_store_data = DataCleaning.convert_product_weights(AWS_store_data)
-local_extractor.upload_to_db(AWS_store_data, 'dim_products')
+#Getting AWS Data: (commented out because stopped working out of the blue and not fixed yet)
+#AWS_store_data = data_extractor.extract_from_s3(s3_url='s3://data-handling-public/products.csv')
+#AWS_store_data = DataCleaning.convert_product_weights(AWS_store_data)
+#local_extractor.upload_to_db(AWS_store_data, 'dim_products')
+
+#Listing tables on local postgre database
+local_tables = local_extractor.list_db_tables()
+print("Tables in the Postgre database:", local_tables)
+
+#Extracting the orders info using read_rds_table
+
+orders_table = local_extractor.read_rds_table('orders_table_cleaned')
+
+#Removing extraneous columns from orders table:
+orders_table = DataCleaning.clean_orders_data(orders_table)
+
+print(type(orders_table))
+local_extractor.upload_to_db(orders_table, 'orders_table')
+
+#Getting 2nd Set of AWS Data:
+
+date_events_data = data_extractor.extract_from_s3(s3_url='https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json')
+cleaned_events_data = DataCleaning.clean_date_events(df= date_events_data)
+local_extractor.upload_to_db(cleaned_events_data, 'dim_date_times')

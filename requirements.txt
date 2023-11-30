@@ -6,3 +6,5 @@ JPype1
 requests
 numpy
 boto3
+io
+uuid
