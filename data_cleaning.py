@@ -1,19 +1,56 @@
 import pandas as pd
 import re
 import numpy as np
-import uuid
+import uuid 
 
 class DataCleaning: 
     
     @staticmethod
     def clean_user_data(dataframe):
-        
-        # Convert columns containing 'date' to datetime
-        for col in dataframe.columns:
-            if 'date' in col:
+        print(f"Cleaning data for DataFrame with columns: {dataframe.columns.tolist()}")
+
+        # Convert 'date_of_birth' and 'join_date' columns to datetime, invalid dates become NaT
+        for col in ['date_of_birth', 'join_date']:
+            if col in dataframe.columns:
+                print(f"Cleaning column: {col}")
                 dataframe[col] = pd.to_datetime(dataframe[col], errors='coerce')
 
+        # Validate and convert 'user_uuid' column, invalid UUIDs become None
+        if 'user_uuid' in dataframe.columns:
+            print("Cleaning 'user_uuid' column")
+            dataframe['user_uuid'] = dataframe['user_uuid'].apply(DataCleaning.validate_uuid)
+
+        # Drop rows with NaT or NaN in critical columns
+        critical_columns = ['date_of_birth', 'join_date', 'user_uuid']
+        for col in critical_columns:
+            if col in dataframe.columns:
+                dataframe = dataframe.dropna(subset=[col])
+        
         return dataframe
+
+    @staticmethod
+    def clean_uuid_column(dataframe, column_name):
+        def is_valid_uuid(uuid_to_test, version=4):
+            try:
+                uuid.UUID(uuid_to_test, version=version)
+                return True
+            except ValueError:
+                return False
+
+        # Apply the is_valid_uuid function to filter the dataframe
+        valid_uuid_mask = dataframe[column_name].apply(lambda x: is_valid_uuid(x) if pd.notna(x) else False)
+        dataframe = dataframe[valid_uuid_mask]
+        return dataframe
+
+
+    @staticmethod
+    def validate_uuid(uuid_to_test):
+        try:
+            val = uuid.UUID(uuid_to_test, version=4)  # Use uuid.UUID because of your import statement
+            return uuid_to_test
+        except ValueError:
+            return None
+
     
     def clean_card_data(df):
         # Internal function to check the date format
@@ -121,3 +158,9 @@ class DataCleaning:
         return df
                 
         
+    def clean_date_column(df, column_name):
+        # Define a regex pattern to match valid dates (adjust pattern as needed)
+        date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
+
+        # Remove invalid dates
+        df[column_name] = df[column_name].apply(lambda x: x if date_pattern.match(str(x)) else pd.NaT)
