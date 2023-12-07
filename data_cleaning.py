@@ -15,41 +15,25 @@ class DataCleaning:
                 print(f"Cleaning column: {col}")
                 dataframe[col] = pd.to_datetime(dataframe[col], errors='coerce')
 
-        # Validate and convert 'user_uuid' column, invalid UUIDs become None
-        if 'user_uuid' in dataframe.columns:
-            print("Cleaning 'user_uuid' column")
-            dataframe['user_uuid'] = dataframe['user_uuid'].apply(DataCleaning.validate_uuid)
+        # Previously here was the call to validate_uuid, which should be removed since the method was deleted
+        # Now you should only drop rows based on the length of the UUID
 
         # Drop rows with NaT or NaN in critical columns
-        critical_columns = ['date_of_birth', 'join_date', 'user_uuid']
+        critical_columns = ['date_of_birth', 'join_date']
         for col in critical_columns:
             if col in dataframe.columns:
                 dataframe = dataframe.dropna(subset=[col])
-        
+
+        if 'user_uuid' in dataframe.columns:
+            dataframe = DataCleaning.clean_uuid_column(dataframe, 'user_uuid')
+
         return dataframe
 
     @staticmethod
     def clean_uuid_column(dataframe, column_name):
-        def is_valid_uuid(uuid_to_test, version=4):
-            try:
-                uuid.UUID(uuid_to_test, version=version)
-                return True
-            except ValueError:
-                return False
-
-        # Apply the is_valid_uuid function to filter the dataframe
-        valid_uuid_mask = dataframe[column_name].apply(lambda x: is_valid_uuid(x) if pd.notna(x) else False)
-        dataframe = dataframe[valid_uuid_mask]
+        """Drop rows where the UUID is not 36 characters long."""
+        dataframe = dataframe[dataframe[column_name].apply(lambda x: len(str(x)) == 36 if pd.notna(x) else False)]
         return dataframe
-
-
-    @staticmethod
-    def validate_uuid(uuid_to_test):
-        try:
-            val = uuid.UUID(uuid_to_test, version=4)  # Use uuid.UUID because of your import statement
-            return uuid_to_test
-        except ValueError:
-            return None
 
     
     def clean_card_data(df):
