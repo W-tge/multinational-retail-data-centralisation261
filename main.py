@@ -25,12 +25,13 @@ else:
             # Read data from the table
             t_data = data_extractor.read_rds_table(table)
             # Clean the data
-            #clean_data = DataCleaning.clean_user_data(t_data)
+            cleaned_data = DataCleaning.clean_user_data(t_data)  # Capture the cleaned data
             # Upload the cleaned data to a new table named "<table_name>_cleaned"
-            local_extractor.upload_to_db(t_data, f"{table}_cleaned")
+            local_extractor.upload_to_db(cleaned_data, f"{table}_cleaned")  # Upload the cleaned_data
             print(f"The Table: '{table}' was successfully cleaned and reuploaded")
         except Exception as e:
             print(f"An error occurred while cleaning and reuploading the data for table '{table}': {e.__class__.__name__}: {e}")
+
 
     # Extract, clean, and upload card details
     try:
@@ -43,6 +44,7 @@ else:
         print("Card details data was successfully cleaned and uploaded.")
     except Exception as e:
         print(f"An error occurred while processing the card details data: {e.__class__.__name__}: {e}")
+
 
 
 # Extract data from 'legacy_users_cleaned' into a DataFrame
@@ -95,28 +97,13 @@ local_extractor.upload_to_db(cleaned_events_data, 'dim_date_times')
 
 local_db_connector.drop_columns('orders_table', ['level_0', 'index'])
 
-# Define the mappings for column data types
-orders_table_column_type_mappings = {
-    'date_uuid': {'data_type': 'UUID'},
-    'user_uuid': {'data_type': 'UUID'},
-    'card_number': {'data_type': 'VARCHAR(19)'},
-    'store_code': {'data_type': 'VARCHAR(12)'},
-    'product_code': {'data_type': 'VARCHAR(11)'},
-    'product_quantity': {'data_type': 'SMALLINT'}
-}
-
-local_db_connector.alter_column_types('orders_table', orders_table_column_type_mappings)
-#Renaming to the proper name
-#local_db_connector.rename_table('legacy_users_cleaned', 'dim_users')
 
 
-dim_users_column_type_mappings = {
-    'first_name': {'data_type': 'VARCHAR(255)'},
-    'last_name': {'data_type': 'VARCHAR(255)'},
-    'date_of_birth': {'data_type': 'DATE'},
-    'country_code': {'data_type': 'VARCHAR(10)'},  
-    'user_uuid': {'data_type': 'UUID'},
-    'join_date': {'data_type': 'DATE'}
-}
 
-local_db_connector.alter_column_types('dim_users', dim_users_column_type_mappings)
+local_db_connector.drop_table('dim_users')
+local_db_connector.drop_table('dim_users_old')
+
+
+local_db_connector.rename_table('legacy_users_cleaned', 'dim_users')
+local_db_connector.drop_columns('dim_users', ['company', 'index', 'email_address', 'address', 'country', 'phone_number'])
+

@@ -60,5 +60,9 @@ class DatabaseConnector:
             print(f"Table {old_name} renamed to {new_name} successfully.")
 
 
-
+    def drop_table(self, table_name):
+        with self.engine.begin() as connection:
+            drop_query = f"DROP TABLE IF EXISTS {table_name};"
+            connection.execute(drop_query)
+            print(f"Table {table_name} dropped successfully.")
 

@@ -9,20 +9,25 @@ class DataCleaning:
     def clean_user_data(dataframe):
         print(f"Cleaning data for DataFrame with columns: {dataframe.columns.tolist()}")
 
-        # Convert 'date_of_birth' and 'join_date' columns to datetime, invalid dates become NaT
-        for col in ['date_of_birth', 'join_date']:
+        # Drop rows with alphabetical characters in 'date_of_birth' and 'join_date' columns
+        date_columns = ['date_of_birth', 'join_date']
+        for col in date_columns:
             if col in dataframe.columns:
-                print(f"Cleaning column: {col}")
+                # This will match any row where the column contains one or more alphabetic characters
+                dataframe = dataframe[~dataframe[col].astype(str).str.contains(r'[A-Za-z]', na=False)]
+                print(f"Dropped invalid dates from column: {col}")
+
+        # Convert 'date_of_birth' and 'join_date' columns to datetime, invalid dates become NaT
+        for col in date_columns:
+            if col in dataframe.columns:
+                print(f"Converting column to datetime: {col}")
                 dataframe[col] = pd.to_datetime(dataframe[col], errors='coerce')
 
-        # Previously here was the call to validate_uuid, which should be removed since the method was deleted
-        # Now you should only drop rows based on the length of the UUID
-
-        # Drop rows with NaT or NaN in critical columns
-        critical_columns = ['date_of_birth', 'join_date']
-        for col in critical_columns:
+        # Drop rows with NaT or NaN in 'date_of_birth' and 'join_date' columns
+        for col in date_columns:
             if col in dataframe.columns:
                 dataframe = dataframe.dropna(subset=[col])
+                print(f"Dropped NaT/NaN from column: {col}")
 
         if 'user_uuid' in dataframe.columns:
             dataframe = DataCleaning.clean_uuid_column(dataframe, 'user_uuid')
