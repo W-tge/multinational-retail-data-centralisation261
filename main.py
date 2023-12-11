@@ -33,14 +33,19 @@ else:
             print(f"An error occurred while cleaning and reuploading the data for table '{table}': {e.__class__.__name__}: {e}")
 
 
-    # Extract, clean, and upload card details
+   # Extract, clean, and upload card details
     try:
         # Extract card details from PDF
         cards = data_extractor.retrieve_pdf_data("https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf")
         # Clean the card details data
-        clean_cards = DataCleaning.clean_card_data(cards)
+        cards_str = DataCleaning.convert_expiry_to_string(cards)
+        print(type(cards_str))
+
+        clean_cards = DataCleaning.clean_card_data_simple(cards_str)
+        #print(type(clean_cards))
+        
         # Upload cleaned card details to the database
-        local_extractor.upload_to_db(clean_cards, "dim_card_details_cleaned")
+        local_extractor.upload_to_db(clean_cards, "dim_card_details")
         print("Card details data was successfully cleaned and uploaded.")
     except Exception as e:
         print(f"An error occurred while processing the card details data: {e.__class__.__name__}: {e}")
@@ -89,8 +94,9 @@ local_extractor.upload_to_db(orders_table, 'orders_table')
 #Getting 2nd Set of AWS Data:
 
 date_events_data = data_extractor.extract_from_s3(s3_url='https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json')
-cleaned_events_data = DataCleaning.clean_date_events(df= date_events_data)
-local_extractor.upload_to_db(cleaned_events_data, 'dim_date_times')
+cleaned_events_data_1 = DataCleaning.clean_date_events(df= date_events_data)
+cleaned_events_data_2 = DataCleaning.clean_uuid_column(dataframe=cleaned_events_data_1, column_name= "date_uuid" )
+local_extractor.upload_to_db(cleaned_events_data_2, 'dim_date_times')
 
 
 #Dropping level_0 and index cols from orders_table:
@@ -103,7 +109,11 @@ local_db_connector.drop_columns('orders_table', ['level_0', 'index'])
 local_db_connector.drop_table('dim_users')
 local_db_connector.drop_table('dim_users_old')
 
+#Fixing same naming issues
 
 local_db_connector.rename_table('legacy_users_cleaned', 'dim_users')
+#local_db_connector.rename_table('dim_card_details_cleaned', 'dim_card_details')
+
 local_db_connector.drop_columns('dim_users', ['company', 'index', 'email_address', 'address', 'country', 'phone_number'])
+
 

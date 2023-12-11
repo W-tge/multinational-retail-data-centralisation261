@@ -41,26 +41,67 @@ class DataCleaning:
         return dataframe
 
     
+    
+        
+    @staticmethod
     def clean_card_data(df):
-        # Internal function to check the date format
-        def check_date_format(date_str):
-            # This regex matches dates in YYYY-MM-DD format
-            if re.match(r"^\d{4}-\d{2}-\d{2}$", str(date_str)):
-                return date_str
-            else:
-                return None  # or pd.NaT if you want to use pandas NaT for missing dates
+        print(type(df))
+        df = df.dropna()
+        print(type(df))
+        df = df[df['expiry_date'].apply(lambda x: len(str(x)) == 6)]
+        print(type(df))
+        return df
 
-        # Apply the check_date_format function to each element in the 'expiry_date' column
-        df['expiry_date'] = df['expiry_date'].apply(check_date_format)
-        # Apply the check_date_format function to each element in the 'date_payment_confirmed' column
-        df['date_payment_confirmed'] = df['date_payment_confirmed'].apply(check_date_format)
+    @staticmethod
+    def clean_card_data_v2(df):
+        # First, check if the input is a DataFrame
+        #if df is None or not isinstance(df, pd.DataFrame):
+            #print("Card data is not a valid DataFrame")
+            #return None
 
-        # Convert to datetime, coercing errors to NaT (missing values)
-        df['expiry_date'] = pd.to_datetime(df['expiry_date'], errors='coerce')
-        df['date_payment_confirmed'] = pd.to_datetime(df['date_payment_confirmed'], errors='coerce')
+        # Drop rows with missing values
+        #df_cleaned = df.dropna()
+
+        # Filter rows where 'expiry_date' is exactly 6 characters
+        #df_cleaned = df_cleaned[df_cleaned['expiry_date'].apply(lambda x: len(str(x)) == 6)]
+
+        return df_cleaned
+
+    
+
+    def convert_expiry_to_string(df):
+        # Check if the 'expiry_date' column is in the DataFrame
+        if 'expiry_date' not in df.columns:
+            print("The dataframe does not have an 'expiry_date' column.")
+            return None
+
+        # Cast 'expiry_date' column to string
+        df['expiry_date'] = df['expiry_date'].astype(str)
 
         return df
 
+    
+    
+    def clean_card_data_simple(df):
+        # Print the first few rows of the 'expiry_date' column to inspect its format
+        print("Expiry dates before cleaning:")
+        print(df['expiry_date'].head())
+        
+        # Convert 'expiry_date' to string to ensure consistent length checking
+        df['expiry_date'] = df['expiry_date'].astype(str)
+        
+        # Apply the filter condition
+        df['expiry_date'] = df['expiry_date'].astype(str).str.strip()
+        df_cleaned = df[df['expiry_date'].apply(lambda x: len(x) == 5)]
+        
+        # Print the first few rows of the cleaned DataFrame to verify the results
+        print("Expiry dates after cleaning:")
+        print(df_cleaned['expiry_date'].head())
+        
+        return df_cleaned
+
+    
+    
     @staticmethod
     def clean_store_data(df):
         # Replace newline characters with a space
