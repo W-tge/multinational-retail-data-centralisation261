@@ -3,3 +3,4 @@ test.py
 test.ipynb
 local_db.yaml
 postgre_connect.py
+test.sql

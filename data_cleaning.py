@@ -36,9 +36,14 @@ class DataCleaning:
 
     @staticmethod
     def clean_uuid_column(dataframe, column_name):
-        """Drop rows where the UUID is not 36 characters long."""
-        dataframe = dataframe[dataframe[column_name].apply(lambda x: len(str(x)) == 36 if pd.notna(x) else False)]
+        """Drop rows where the UUID is not 36 characters long, if the column exists."""
+        # Check if the column_name exists in the dataframe
+        if column_name in dataframe.columns:
+            # Apply the filtering only if the column exists
+            dataframe = dataframe[dataframe[column_name].apply(lambda x: len(str(x)) == 36 if pd.notna(x) else False)]
+        # If the column does not exist, do nothing
         return dataframe
+
 
     
     
@@ -116,16 +121,21 @@ class DataCleaning:
         df['staff_numbers'] = pd.to_numeric(df['staff_numbers'], errors='coerce')
         df['opening_date'] = pd.to_datetime(df['opening_date'], errors='coerce')
         
-        # Drop the 'index' column
-        df.drop('index', axis=1, inplace=True)
+        # Drop the 'index' column if it exists
+        if 'index' in df.columns:
+            df.drop('index', axis=1, inplace=True)
 
-        #Drop the Lat column
-        df.drop('lat', axis = 1, inplace = True)
+        # Drop the 'lat' column if it exists
+        if 'lat' in df.columns:
+            df.drop('lat', axis=1, inplace=True)
 
-        #Reording the columns to a more logical order
-        new_order = ['continent', 'country_code', 'locality', 'address', 'longitude', 'latitude',  'store_code', 'staff_numbers', 'opening_date', 'store_type', ]
-        df = df.reindex(columns = new_order)
+        # Drop rows with duplicate product_code values
+        if 'product_code' in df.columns:
+            df.drop_duplicates(subset='product_code', keep='first', inplace=True)
 
+        # Reordering the columns to a more logical order
+        new_order = ['continent', 'country_code', 'locality', 'address', 'longitude', 'latitude', 'store_code', 'staff_numbers', 'opening_date', 'store_type']
+        df = df.reindex(columns=new_order)
 
         return df
         
@@ -194,3 +204,9 @@ class DataCleaning:
 
         # Remove invalid dates
         df[column_name] = df[column_name].apply(lambda x: x if date_pattern.match(str(x)) else pd.NaT)
+
+    @staticmethod
+    def unique_product_codes(df):
+        if 'product_code' in df.columns:
+         df.drop_duplicates(subset='product_code', keep='first', inplace=True)
+        return df

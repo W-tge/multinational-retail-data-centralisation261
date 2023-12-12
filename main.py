@@ -26,6 +26,7 @@ else:
             t_data = data_extractor.read_rds_table(table)
             # Clean the data
             cleaned_data = DataCleaning.clean_user_data(t_data)  # Capture the cleaned data
+            cleaned_data = DataCleaning.clean_uuid_column(cleaned_data, "user_uuid" )
             # Upload the cleaned data to a new table named "<table_name>_cleaned"
             local_extractor.upload_to_db(cleaned_data, f"{table}_cleaned")  # Upload the cleaned_data
             print(f"The Table: '{table}' was successfully cleaned and reuploaded")
@@ -77,6 +78,10 @@ local_extractor.upload_to_db(clean_store_data_df, 'dim_store_details')
 #AWS_store_data = DataCleaning.convert_product_weights(AWS_store_data)
 #local_extractor.upload_to_db(AWS_store_data, 'dim_products')
 
+prods = local_extractor.read_rds_table('dim_products')
+prods = DataCleaning.unique_product_codes(prods)
+local_extractor.upload_to_db(prods, 'dim_products')
+
 #Listing tables on local postgre database
 local_tables = local_extractor.list_db_tables()
 print("Tables in the Postgre database:", local_tables)
@@ -108,6 +113,8 @@ local_db_connector.drop_columns('orders_table', ['level_0', 'index'])
 
 local_db_connector.drop_table('dim_users')
 local_db_connector.drop_table('dim_users_old')
+local_db_connector.drop_table('dim_card_details_cleaned')
+
 
 #Fixing same naming issues
 
